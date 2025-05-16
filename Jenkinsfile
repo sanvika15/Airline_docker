@@ -1,20 +1,17 @@
 pipeline {
     agent {
         docker {
-            image 'maven:3.9.6-eclipse-temurin-17'  // Java 17 + Maven image
-            args '-v /var/run/docker.sock:/var/run/docker.sock'  // optional, if you need docker inside container
+            image 'maven:3.9.6-eclipse-temurin-17'
+            args "-v ${env.WORKSPACE.replaceAll('\\\\','/')}: /workspace"  // map Windows path to /workspace
+            reuseNode true
         }
     }
     stages {
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                sh 'pwd'                // inside container, should be /workspace
+                sh 'mvn clean install'  // run mvn inside container
             }
-        }
-    }
-    post {
-        always {
-            cleanWs()
         }
     }
 }
