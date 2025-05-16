@@ -2,6 +2,8 @@ pipeline {
     agent {
         docker {
             image 'maven:3.9.6-eclipse-temurin-17'
+            args '-v /c/ProgramData/Jenkins/.jenkins/workspace:/workspace -w /workspace'
+
         }
     }
 
