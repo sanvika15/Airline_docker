@@ -2,17 +2,17 @@ pipeline {
     agent any
 
     environment {
-        EC2_USER = "Jenkins Master" // Replace with your EC2 username
+        EC2_USER = "Jenkins" // Replace with your EC2 username (e.g., ec2-user for Amazon Linux)
         EC2_HOST = "ec2-65-1-134-15.ap-south-1.compute.amazonaws.com" // Replace with your EC2 public DNS or IP
-        KEY_PATH = "airline-docker-key.pem" // Path to your EC2 key pair
-        JAR_NAME = "target/devops-0.0.1-SNAPSHOT.jar" // Adjust based on your project structure
+        KEY_PATH = "C:/Users/kndak/Desktop/honor-devops/airline/airline-docker-key.pem" // Path to your EC2 key pair
+        JAR_NAME = "C:/Users/kndak/Desktop/honor-devops/airline/target/devops-0.0.1-SNAPSHOT.jar" // Full path to your JAR file
         DOCKER_IMAGE = "maven:3.9.9-amazoncorretto-21" // Docker image with Maven and Java
     }
 
     stages {
         stage('Checkout Source') {
             steps {
-                git url: 'https://github.com/sanvika15/Airline_docker.git', branch: 'main' // Replace with your repository URL
+                git url: 'https://github.com/sanvika15/Airline_docker', branch: 'main' // Ensure this URL is correct
             }
         }
 
