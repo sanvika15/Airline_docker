@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.8.7-eclipse-temurin-17'
-            args '-v /root/.m2:/root/.m2' // Mount local Maven repo for caching
-        }
-    }
+    agent any
 
     environment {
         EC2_USER = "ec2-user"
