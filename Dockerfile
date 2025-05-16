@@ -1,22 +1,12 @@
-# This is a comment line
-# The Java library that will be used
-# FROM openjdk:17-jdk-slim-buster 
-FROM openjdk:8-jdk-alpine
 
-# Working directory
-WORKDIR /src
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copy Maven wrapper directory
-COPY .mvn/ .mvn/
-
-# Copy Maven wrapper script and pom.xml file
-COPY mvnw pom.xml ./
-
-# Download dependencies for offline work
-RUN ./mvnw dependency:go-offline
-
-# Copy source code
-COPY src/ ./src/
-
-# Run Spring Boot application
-CMD ["./mvnw", "spring-boot:run"]
+# Run stage
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
