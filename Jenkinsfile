@@ -1,17 +1,30 @@
 pipeline {
+    environment {
+        JAVA_TOOL_OPTIONS = "-Duser.home=/home/jenkins"
+    }
     agent {
-        docker {
-            image 'maven:3.9.6-eclipse-temurin-17'
-            args "-v ${env.WORKSPACE.replaceAll('\\\\','/')}: /workspace"  // map Windows path to /workspace
-            reuseNode true
+        dockerfile {
+            label "docker"
+            args "-v /tmp/maven:/home/jenkins/.m2 -e MAVEN_CONFIG=/home/jenkins/.m2"
         }
     }
+
     stages {
-        stage('Build') {
+        stage("Build") {
             steps {
-                sh 'pwd'                // inside container, should be /workspace
-                sh 'mvn clean install'  // run mvn inside container
+                script {
+                    echo "JAVA_TOOL_OPTIONS=${env.JAVA_TOOL_OPTIONS}"
+                }
+                sh "ssh -V"
+                sh "mvn -version"
+                sh "mvn clean install"
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
