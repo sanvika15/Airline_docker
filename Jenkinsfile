@@ -30,9 +30,10 @@ pipeline {
 
         stage('Pushing to ECR') {
             steps {
-                aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d7i2u9e5
+                bat '(Get-ECRLoginCommand).Password | docker login --username AWS --password-stdin public.ecr.aws/d7i2u9e5'                bat 'docker build -t my-cicd-repo .'
                 bat 'docker build -t my-cicd-repo .'
                 bat 'docker push public.ecr.aws/d7i2u9e5/my-cicd-repo:latest'
+
             }
         }
 
