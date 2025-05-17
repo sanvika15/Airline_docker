@@ -1,62 +1,53 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.9.6-eclipse-temurin-17'
-            args '-v /c/ProgramData/Jenkins/.jenkins/workspace:/workspace -w /workspace'
+    agent any
 
-        }
-    }
-
-    environment {
-        JAR_NAME = "devops-0.0.1-SNAPSHOT.jar"
-        EC2_HOST = "ec2-65-1-134-15.ap-south-1.compute.amazonaws.com"
-        PEM_KEY = credentials('airline-docker-key.pem')
-    }
+    //environment {
+       // registry = "public.ecr.aws/d7i2u9e5/my-cicd-repo"
+      //  region = "ap-south-1"   // corrected region (no "b" at end)
+      //  imageTag = "latest"
+  //  }
 
     stages {
-        stage('Checkout') {
+        stage('Cloning Git') {
             steps {
-                checkout scm
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          userRemoteConfigs: [[url: 'https://github.com/sanvika15/Airline_docker']]
+                ])
             }
         }
 
-        stage('Build') {
+        stage('Building JAR') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                bat 'mvn clean package -DskipTests'
+            }
+        }
+        stage('Verify AWS CLI') {
+            steps {
+                bat 'aws --version'
             }
         }
 
-        stage('Test') {
+        stage('Pushing to ECR') {
             steps {
-                sh 'mvn test'
+                aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d7i2u9e5
+                bat 'docker build -t my-cicd-repo .'
+                bat 'docker push public.ecr.aws/d7i2u9e5/my-cicd-repo:latest'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Stop previous containers') {
             steps {
-                sh 'docker build -t airline-management .'
+                bat '''
+                docker stop myjavaContainer || true
+                docker rm myjavaContainer || true
+                '''
             }
         }
 
-        stage('Push Docker Image (Optional)') {
-            when {
-                expression { return false }
-            }
+        stage('Docker Run') {
             steps {
-                sh 'docker tag airline-management sanvikaa15/airline-management'
-                sh 'docker push sanvikaa15/airline-management'
-            }
-        }
-
-        stage('Deploy to EC2') {
-            steps {
-                sh "scp -i ${PEM_KEY} target/${JAR_NAME} ${EC2_HOST}:/home/ec2-user/"
-                sh """
-                ssh -i ${PEM_KEY} ${EC2_HOST} << EOF
-                    pkill -f '${JAR_NAME}' || true
-                    nohup java -jar ${JAR_NAME} > app.log 2>&1 &
-                EOF
-                """
+                bat 'docker run -d -p 8081:8081 --name myjavaContainer public.ecr.aws/d7i2u9e5/my-cicd-repo:latest'
             }
         }
     }
